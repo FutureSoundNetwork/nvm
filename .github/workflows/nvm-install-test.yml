@@ -60,14 +60,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: resolve HEAD to sha
+        env:
+          MATRIX_REF: ${{ matrix.ref }}
         run: |
-          if [ '${{ matrix.ref }}' = 'HEAD' ]; then
+          if [ "${MATRIX_REF}" = 'HEAD' ]; then
             REF="$(git rev-parse HEAD)"
           else
-            REF="${{ matrix.ref }}"
+            REF="${MATRIX_REF}"
           fi
           echo "resolved ref: ${REF}"
-          echo "ref="$REF"" >> $GITHUB_ENV
+          echo "ref=${REF}" >> "${GITHUB_ENV}"
       - run: echo $- # which options are set
       - run: echo node > .nvmrc
         if: ${{ matrix.has-nvmrc == 'nvmrc' }}
@@ -83,18 +85,22 @@ jobs:
           . $NVM_DIR/nvm.sh && nvm --version
       - name: nvm install in 1 shell level, ${{ matrix.has-nvmrc }}
         if: ${{ matrix.shell-level == '1 shlvl' }}
+        env:
+          HAS_NVMRC: ${{ matrix.has-nvmrc }}
         run: |
           set -ex
           . $NVM_DIR/nvm.sh
           echo nvm.sh sourced
           nvm --version
-          if [ '${{ matrix.has-nvmrc }}' == 'nvmrc' ]; then
+          if [ "${HAS_NVMRC}" = 'nvmrc' ]; then
             nvm install
           fi
       - name: nvm install in 2 shell levels, ${{ matrix.has-nvmrc }}
         if: ${{ matrix.shell-level == '2 shlvls' }}
+        env:
+          HAS_NVMRC: ${{ matrix.has-nvmrc }}
         run: |
-          if [ '${{ matrix.has-nvmrc }}' == 'nvmrc' ]; then
+          if [ "${HAS_NVMRC}" = 'nvmrc' ]; then
             bash -c "set -ex && . $NVM_DIR/nvm.sh && echo nvm.sh sourced && nvm --version && nvm install"
           else
             bash -c "set -ex && . $NVM_DIR/nvm.sh && echo nvm.sh sourced && nvm --version"
